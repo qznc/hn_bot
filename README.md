@@ -1,7 +1,11 @@
 # HN Bot
 
 A Bot for fetching news from Hacker News
-and publishing them to reddit.
+and publishing them to reddit [r/hackernews](https://www.reddit.com/r/hackernews/).
+
+The motivation:
+For some reddit users it is convenient.
+There is no insta-kill in case of too many comments.
 
 # Setup
 
@@ -17,3 +21,6 @@ The Makefile captures all the magic, so you can just execute
     make run
 
 It creates a local database of urls already posted.
+
+For r/hackernews,
+this run as an hourly cron job.
