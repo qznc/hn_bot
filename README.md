@@ -14,4 +14,6 @@ This project uses virtualenv and pip.
 The initial setup should run automatically the first time.
 The Makefile captures all the magic, so you can just execute
 
-  make run
+    make run
+
+It creates a local database of urls already posted.
