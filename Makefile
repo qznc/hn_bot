@@ -7,7 +7,7 @@ SETUP_FLAG=.env/setup_done
 
 $(SETUP_FLAG):
 	mkdir .env || true
-	virtualenv --python=python3 --no-site-packages --distribute .env
+	python3 -m venv .env
 	bash -c "source .env/bin/activate && pip install -r requirements.txt"
 	@echo "source .env/bin/activate for correct environment"
 	touch $(SETUP_FLAG)

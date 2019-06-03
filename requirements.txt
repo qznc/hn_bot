@@ -1,2 +1,2 @@
-beautifulsoup4==4.4.0
-praw==3.5.0
+beautifulsoup4==4.7.1
+praw==6.2.0

@@ -101,22 +101,18 @@ def get_hn_items():
       _LOG.info("Skip Ad: %s" % item.title)
 
 import praw
-_PRAW_USER_AGENT = "rbot of /u/qznc"
-_REDDIT = praw.Reddit(_PRAW_USER_AGENT)
-try:
-  _REDDIT.login()
-except praw.errors.InvalidUserPass:
-  _LOG.error("invalid reddit password for /u/%s" % (username))
+_REDDIT = praw.Reddit(site_name='bot1')
+print(_REDDIT.user.me())
 
 def publish_to_reddit(thing, sub="hackernews"):
     """Publish a thing to a subreddit"""
     assert thing.url
     assert thing.title
-    r = _REDDIT.get_subreddit(sub)
+    r = _REDDIT.subreddit(sub)
     submission = None
     try:
       _LOG.info("publish to /r/%s '%s'" % (sub,str(thing)))
-      submission = r.submit(title=thing.title, url=thing.url)
+      submission = r.submit(title=str(thing.title), url=str(thing.url))
     except praw.errors.AlreadySubmitted:
       _LOG.info("already submitted: %s" % (thing.url))
     except praw.errors.RateLimitExceeded:
@@ -129,7 +125,7 @@ def publish_to_reddit(thing, sub="hackernews"):
       _LOG.error("API error: %s" % e)
     if submission and thing.body:
       try:
-        submission.add_comment(thing.body)
+        submission.reply(str(thing.body))
       except AttributeError as e:
         _LOG.error("mysterious error deep within PRAW/json: %s" % e)
 
