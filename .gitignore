@@ -2,3 +2,5 @@
 .hn_bot.shelve
 .hn_bot.shelve.db
 praw.ini
+.serverless/
+node_modules/

@@ -1,142 +1,27 @@
 #!/usr/bin/env python3
 
-import logging
-_LOG = logging.getLogger(__name__)
-
-logging.basicConfig(
-  level=logging.ERROR,
-  format='[%(asctime)s %(name)s:%(lineno)d:%(levelname)s] %(message)s',
-  datefmt='%Y-%m-%d %H:%M:%S'
-)
-
-from bs4 import BeautifulSoup
-from urllib.request import urlopen, Request
-from urllib.error import HTTPError
-
-class attrdict(dict):
-  def __getattr__(self, key):
-    return self[key]
-  def __setattr__(self, key, value):
-    self[key] = value
-
-_FRONTPAGE_URL = "http://news.ycombinator.com/"
-_BEST_URL = "http://news.ycombinator.com/best"
-
-def _get_things(url, mincomments=0):
-  """Parse Hacker News page"""
-  raw = None
-  try:
-    req = Request(url, None, {'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5 rbot by qznc@web.de'})
-    fh = urlopen(req)
-    _LOG.info("get "+url)
-    raw = fh.read().decode("utf8")
-    fh.close()
-  except HTTPError as e:
-    _LOG.info("http error: "+str(e))
-    return
-  soup = BeautifulSoup(raw, "html.parser")
-  item = attrdict()
-  for tr in soup.find_all('tr'):
-    if not tr.td: continue
-    if tr.td.get('class', [False])[0] == "title":
-      # get title and url
-      for a in tr.find_all('a'):
-        if a['href'].startswith("vote?for="): continue
-        if a['href'].startswith("user?id="): continue
-        if a['href'].startswith("hide?id="): continue
-        if a['href'].startswith("from?site="): continue
-        if a['href'].startswith("http://www.scribd.com/"): continue
-        item.title = a.string
-        item.url = a['href']
-        if item.url.startswith("item?id="):
-          item.url = _FRONTPAGE_URL + item.url
-        continue
-    if item: # meta info in next tr after title
-      item.comment_count = 0
-      item.points = 0
-      for span in tr.find_all('span'):
-        if span.string and span.string.endswith("points"):
-          _LOG.debug(span.string)
-          item.points = int(span.string[:-7])
-      if tr.td.get('colspan', False) == "2":
-        # get comment info
-        for a in tr.find_all('a'):
-          if a.string == "More": continue
-          if a['href'].startswith("vote?for="): continue
-          if a['href'].startswith("user?id="): continue
-          if a['href'].startswith("hide?id="): continue
-          if a.string != "discuss":
-            item.comment_count = int(a.string.split()[0])
-          item.comments = _FRONTPAGE_URL+a['href']
-        item.body = None
-        yield item
-        item = attrdict()
-
-def get_front(mincomments=0):
-  return list(_get_things(_FRONTPAGE_URL, mincomments))
-
-def get_best(mincomments=0):
-  return list(_get_things(_BEST_URL, mincomments))
-
-def get_hn_items():
-  """Yield tuples of Hacker News items"""
-  items = list()
-  items.extend(get_front(mincomments=4))
-  items.extend(get_best(mincomments=2))
-  for item in items:
-    comments = item.get("comments", None)
-    if comments:
-      item.body = "There is a [discussion on Hacker News](%s), but feel free to comment here as well." % comments
-      # require some endorsement
-      if item.points < 60:
-        _LOG.info("Too few points (%dp): %s" %\
-                (item.points, item.title))
-        continue
-      if item.points < 120 and item.comment_count < 30:
-        _LOG.info("Too few comments (%dp, %dc): %s" %\
-                (item.points, item.comment_count, item.title))
-        continue
-      yield(item)
-    else:
-      _LOG.info("Skip Ad: %s" % item.title)
-
-import praw
-_REDDIT = praw.Reddit(user_agent="qznc_bot2 python")
-print(_REDDIT.user.me())
-
-def publish_to_reddit(thing, sub="hackernews"):
-    """Publish a thing to a subreddit"""
-    assert thing.url
-    assert thing.title
-    r = _REDDIT.subreddit(sub)
-    submission = None
-    try:
-      _LOG.info("publish to /r/%s '%s'" % (sub,str(thing)))
-      submission = r.submit(title=str(thing.title), url=str(thing.url))
-    except praw.errors.AlreadySubmitted:
-      _LOG.info("already submitted: %s" % (thing.url))
-    except praw.errors.RateLimitExceeded:
-      _LOG.warning("reddit rate limit exceeded")
-    except praw.errors.InvalidSubreddit:
-      _LOG.warning("skip invalid subreddit %s" % sub)
-    except praw.errors.ExceptionList as e:
-      _LOG.warning("lots of errors: %s" % e)
-    except praw.errors.APIException as e:
-      _LOG.error("API error: %s" % e)
-    if submission and thing.body:
-      try:
-        submission.reply(str(thing.body))
-      except AttributeError as e:
-        _LOG.error("mysterious error deep within PRAW/json: %s" % e)
-
 import shelve
-URLS_POSTED = shelve.open(".hn_bot.shelve")
+from hn_bot import run
 
-for thing in get_hn_items():
-    if thing.url in URLS_POSTED:
-        continue
-    publish_to_reddit(thing)
-    print(thing.url)
-    URLS_POSTED[thing.url] = True
 
-URLS_POSTED.close()
+class posted_items_shelve:
+    def __enter__(self):
+        self.URLS_POSTED = shelve.open(".hn_bot.shelve")
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.URLS_POSTED.close()
+
+    def has(self, thing):
+        return thing.url in self.URLS_POSTED
+
+    def put(self, thing):
+        self.URLS_POSTED[thing.url] = True
+
+
+def main():
+    with posted_items_shelve() as posted_items:
+        run(posted_items)
+
+if __name__ == '__main__':
+    main()
