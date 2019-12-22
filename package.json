@@ -1,0 +1,15 @@
+{
+  "name": "hn_bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/qznc/hn_bot.git",
+  "author": "Christoph Gysin <christoph.gysin@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "sls deploy"
+  },
+  "devDependencies": {
+    "serverless": "^1.60.1",
+    "serverless-python-requirements": "^5.0.1"
+  }
+}
