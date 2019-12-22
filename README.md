@@ -29,11 +29,9 @@ this run as an hourly cron job.
 
 This project can also be run from within a Docker container.
 
-```bash
-cp /path/to/praw.ini .
-docker build -t hnbot .
-docker run -d hnbot
-```
+    cp /path/to/praw.ini .
+    docker build -t hnbot .
+    docker run -d hnbot
 
 # Licence: MIT
 
