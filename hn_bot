@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+
+import shelve
+from hn_bot import run
+
+
+class posted_items_shelve:
+    def __enter__(self):
+        self.URLS_POSTED = shelve.open(".hn_bot.shelve")
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.URLS_POSTED.close()
+
+    def has(self, thing):
+        return thing.url in self.URLS_POSTED
+
+    def put(self, thing):
+        self.URLS_POSTED[thing.url] = True
+
+
+def main():
+    with posted_items_shelve() as posted_items:
+        run(posted_items)
+
+if __name__ == '__main__':
+    main()

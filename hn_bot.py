@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import logging
 _LOG = logging.getLogger(__name__)
 
@@ -129,14 +127,10 @@ def publish_to_reddit(thing, sub="hackernews"):
       except AttributeError as e:
         _LOG.error("mysterious error deep within PRAW/json: %s" % e)
 
-import shelve
-URLS_POSTED = shelve.open(".hn_bot.shelve")
-
-for thing in get_hn_items():
-    if thing.url in URLS_POSTED:
-        continue
-    publish_to_reddit(thing)
-    print(thing.url)
-    URLS_POSTED[thing.url] = True
-
-URLS_POSTED.close()
+def run(posted_items):
+    for thing in get_hn_items():
+        if posted_items.has(thing):
+            continue
+        publish_to_reddit(thing)
+        print(thing.url)
+        posted_items.put(thing)
