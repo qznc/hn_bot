@@ -25,6 +25,16 @@ It creates a local database of urls already posted.
 For r/hackernews,
 this run as an hourly cron job.
 
+# Dockerfile
+
+This project can also be run from within a Docker container.
+
+```bash
+cp /path/to/praw.ini .
+docker build -t hnbot .
+docker run -d hnbot
+```
+
 # Licence: MIT
 
 Copyright (c) 2017 Andreas Zwinkau
