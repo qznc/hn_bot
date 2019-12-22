@@ -101,7 +101,7 @@ def get_hn_items():
       _LOG.info("Skip Ad: %s" % item.title)
 
 import praw
-_REDDIT = praw.Reddit(site_name='bot1', user_agent="qznc_bot2 python")
+_REDDIT = praw.Reddit(user_agent="qznc_bot2 python")
 print(_REDDIT.user.me())
 
 def publish_to_reddit(thing, sub="hackernews"):
