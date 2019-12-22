@@ -130,7 +130,8 @@ def publish_to_reddit(thing, sub="hackernews"):
         _LOG.error("mysterious error deep within PRAW/json: %s" % e)
 
 import shelve
-URLS_POSTED = shelve.open(".hn_bot.shelve")
+import os
+URLS_POSTED = shelve.open(os.getenv("database_file",".hn_bot.shelve"))
 
 for thing in get_hn_items():
     if thing.url in URLS_POSTED:
