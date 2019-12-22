@@ -1,0 +1,46 @@
+frameworkVersion: '>=1.60.1 <2.0.0'
+
+service: hn-bot
+
+plugins:
+  - serverless-python-requirements
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: python3.8
+  memorySize: 256
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource:
+        - Fn::GetAtt: [PostedItemsTable, Arn]
+
+package:
+  exclude:
+    - .env/**
+
+functions:
+  hn-bot:
+    handler: hn_bot_lambda.handler
+    events:
+      - schedule: rate(1 hour)
+    environment:
+      POSTED_ITEMS_TABLE:
+        Ref: PostedItemsTable
+
+resources:
+  Resources:
+    PostedItemsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
