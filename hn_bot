@@ -92,7 +92,7 @@ def get_hn_items():
         _LOG.info("Too few points (%dp): %s" %\
                 (item.points, item.title))
         continue
-      if item.points < 120 and item.comment_count < 30:
+      if item.points < 200 and item.comment_count < 30:
         _LOG.info("Too few comments (%dp, %dc): %s" %\
                 (item.points, item.comment_count, item.title))
         continue
@@ -101,7 +101,7 @@ def get_hn_items():
       _LOG.info("Skip Ad: %s" % item.title)
 
 import praw
-_REDDIT = praw.Reddit(user_agent="qznc_bot2 python")
+_REDDIT = praw.Reddit("bot1", user_agent="qznc_bot2 python")
 print(_REDDIT.user.me())
 
 def publish_to_reddit(thing, sub="hackernews"):
